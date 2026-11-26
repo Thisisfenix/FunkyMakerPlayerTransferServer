@@ -1,0 +1,44 @@
+# FunkyMaker online server on Cloudflare Workers (free plan).
+# Deploy: npm install && npx wrangler login && npx wrangler r2 bucket create funkymaker-online && npm run deploy
+name = "funkymaker-online"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "Hub"
+
+[[durable_objects.bindings]]
+name = "LEADERBOARD"
+class_name = "Leaderboard"
+
+# The free plan only allows SQLite-backed Durable Objects.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Hub", "Leaderboard"]
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "funkymaker-online"
+
+[vars]
+# Same knobs as the Render env vars (Transfer__* / Testing__*).
+MAX_UPLOAD_MB = "250"
+# R2 multipart parts must be >= 5 MiB (all but the last) and all the same size.
+UPLOAD_CHUNK_MB = "6"
+MAX_ROOM_MEMBERS = "16"
+STALL_TIMEOUT_SECONDS = "300"
+DOWNLOAD_COMPLETION_GRACE_SECONDS = "600"
+LOADING_TIMEOUT_SECONDS = "180"
+CACHE_MINUTES = "15"
+PROGRESS_INTERVAL_MS = "200"
+TESTING_OPEN = "true"
+TESTING_MESSAGE = ""
+# Where the room server is created the first time (empty = near the first player who connects).
+# One of: wnam, enam, sam, weur, eeur, apac, oc, afr, me
+HUB_LOCATION_HINT = ""
+# Secret (not a var): npx wrangler secret put ADMIN_TOKEN  — enables POST /api/admin/import
